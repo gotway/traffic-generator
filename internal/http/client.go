@@ -54,6 +54,10 @@ func (c *Client) Post(path string, body interface{}) (int, error) {
 	return res.StatusCode, nil
 }
 
+func (c *Client) Close() {
+	c.httpClient.CloseIdleConnections()
+}
+
 func (c *Client) getURL(path string) string {
 	return c.url + path
 }
@@ -73,4 +77,11 @@ func NewClient(url string, options ClientOptions) *Client {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}}
+}
+
+func GetURL(address string, tlsEnabled bool) string {
+	if tlsEnabled {
+		return "https://" + address
+	}
+	return "http://" + address
 }

@@ -1,23 +1,21 @@
 package client
 
 import (
-	"net/http"
-
 	internalHTTP "github.com/gotway/traffic-generator/internal/http"
 )
 
-type GotwayClient struct {
+type Gotway struct {
 	httpClient *internalHTTP.Client
 }
 
-func (c *GotwayClient) Health() (bool, error) {
-	statusCode, err := c.httpClient.Get("/api/health", nil)
-	if err != nil {
-		return false, err
-	}
-	return statusCode == http.StatusOK, nil
+func (c *Gotway) Health() (bool, error) {
+	return health(c.httpClient, getGotwayPath("/health"))
 }
 
-func NewGotwayClient(httpClient *internalHTTP.Client) *GotwayClient {
-	return &GotwayClient{httpClient}
+func getGotwayPath(path string) string {
+	return "/api" + path
+}
+
+func NewGotway(httpClient *internalHTTP.Client) *Gotway {
+	return &Gotway{httpClient}
 }

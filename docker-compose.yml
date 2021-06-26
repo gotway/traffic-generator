@@ -6,11 +6,12 @@ services:
     environment:
       - ENV=production
       - LOG_LEVEL=info
-      - GOTWAY_URL=https://gotway:11000
+      - GOTWAY_ADDRESS=gotway:11000
       - CLIENT_TIMEOUT=10
       - NUM_WORKERS=5
       - NUM_CLIENTS=5
       - REQUEST_INTERVAL=10
+      - TLS=true
     ports:
       - "11000:11000"
     volumes:
