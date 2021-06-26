@@ -1,0 +1,17 @@
+version: "3.3"
+
+services:
+  traffic:
+    image: gotwaygateway/traffic-generator
+    environment:
+      - ENV=production
+      - LOG_LEVEL=info
+      - GOTWAY_URL=https://gotway:11000
+      - CLIENT_TIMEOUT=10
+      - NUM_WORKERS=5
+      - NUM_CLIENTS=5
+      - REQUEST_INTERVAL=10
+    ports:
+      - "11000:11000"
+    volumes:
+      - "./cert:/etc/ssl"
