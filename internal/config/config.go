@@ -19,9 +19,9 @@ var (
 		c.GetIntEnv("CLIENT_TIMEOUT", 10),
 	) * time.Second
 	// NumWorkers is the number of goroutines used to generate traffic
-	NumWorkers = c.GetIntEnv("NUM_WORKERS", 5)
+	NumWorkers = c.GetIntEnv("NUM_WORKERS", 3)
 	// NumClients is the number of concurrent clients to simulate
-	NumClients = c.GetIntEnv("NUM_CLIENTS", 5)
+	NumClients = c.GetIntEnv("NUM_CLIENTS", 1)
 	// RequestInterval defines the interval of requests in seconds
 	RequestInterval = time.Duration(
 		c.GetIntEnv("REQUEST_INTERVAL", 10),

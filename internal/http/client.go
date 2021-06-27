@@ -43,6 +43,7 @@ func (c *Client) Get(path string, query map[string][]string) (*ClientResponse, e
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	return getClientResponse(res)
 }
 
@@ -59,6 +60,7 @@ func (c *Client) Post(path string, body interface{}) (*ClientResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 	return getClientResponse(res)
 }
 
@@ -87,6 +89,7 @@ func (c *Client) Delete(path string, id int) (int, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer res.Body.Close()
 	return res.StatusCode, nil
 }
 

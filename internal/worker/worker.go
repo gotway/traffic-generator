@@ -2,7 +2,6 @@ package worker
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/gotway/gotway/pkg/log"
@@ -44,62 +43,60 @@ func (w *Worker) Start(ctx context.Context) {
 
 func (w *Worker) simulateTraffic(ctx context.Context) {
 	w.logger.Infof("simulating traffic of %d clients", w.options.NumClients)
-	var wg sync.WaitGroup
-	wg.Add(w.options.NumClients)
 	for i := 0; i < w.options.NumClients; i++ {
-		go func() {
-			defer wg.Done()
-			w.singleClientTraffic(ctx)
-		}()
+		go w.singleClientTraffic(ctx)
 	}
-	wg.Wait()
 }
 
 func (w *Worker) singleClientTraffic(ctx context.Context) {
-	products := []catalog.Product{
-		model.NewRandomProduct(),
-		model.NewRandomProduct(),
-		model.NewRandomProduct(),
-		model.NewRandomProduct(),
-	}
-	created := make([]int, len(products))
-	for i, p := range products {
-		c, err := w.catalogClient.Create(p)
-		if err != nil {
-			w.logger.Error("error creating product ", err)
+	go func() {
+		products := []catalog.Product{
+			model.NewRandomProduct(),
+			model.NewRandomProduct(),
+			model.NewRandomProduct(),
+			model.NewRandomProduct(),
 		}
-		created[i] = c.ID
-		defer w.catalogClient.Delete(c.ID)
-		if rand.Bool() {
-			if err := w.catalogClient.Update(c.ID, model.NewRandomProduct()); err != nil {
-				w.logger.Error("error updating product ", err)
+		created := make([]int, len(products))
+		for i, p := range products {
+			c, err := w.catalogClient.Create(p)
+			if err != nil {
+				w.logger.Error("error creating product ", err)
+			}
+			created[i] = c.ID
+			defer w.catalogClient.Delete(c.ID)
+			if rand.Bool() {
+				if err := w.catalogClient.Update(c.ID, model.NewRandomProduct()); err != nil {
+					w.logger.Error("error updating product ", err)
+				}
 			}
 		}
-	}
-	_, err := w.catalogClient.List(0, rand.Int(len(products), 100))
-	if err != nil {
-		w.logger.Error("error listing product ", err)
-	}
+		_, err := w.catalogClient.List(0, rand.Int(len(products), 100))
+		if err != nil {
+			w.logger.Error("error listing product ", err)
+		}
 
-	if _, err := w.stockClient.Upsert(model.NewRandomStockList(created...)); err != nil {
-		w.logger.Error("error upserting strock ", err)
-	}
-	if _, err := w.stockClient.List(created...); err != nil {
-		w.logger.Error("error getting stock ", err)
-	}
+		if _, err := w.stockClient.Upsert(model.NewRandomStockList(created...)); err != nil {
+			w.logger.Error("error upserting strock ", err)
+		}
+		if _, err := w.stockClient.List(created...); err != nil {
+			w.logger.Error("error getting stock ", err)
+		}
+	}()
 
-	if _, err = w.routeClient.GetFeature(ctx, route.ValidPoint); err != nil {
-		w.logger.Error("get feature failed ", err)
-	}
-	if _, err := w.routeClient.ListFeatures(ctx, route.Rect); err != nil {
-		w.logger.Error("list features failed ", err)
-	}
-	if _, err := w.routeClient.RecordRoute(ctx); err != nil {
-		w.logger.Error("record route failed ", err)
-	}
-	if _, err := w.routeClient.RouteChat(ctx); err != nil {
-		w.logger.Error("route chat failed ", err)
-	}
+	go func() {
+		if _, err := w.routeClient.GetFeature(ctx, route.ValidPoint); err != nil {
+			w.logger.Error("get feature failed ", err)
+		}
+		if _, err := w.routeClient.ListFeatures(ctx, route.Rect); err != nil {
+			w.logger.Error("list features failed ", err)
+		}
+		if _, err := w.routeClient.RecordRoute(ctx); err != nil {
+			w.logger.Error("record route failed ", err)
+		}
+		if _, err := w.routeClient.RouteChat(ctx); err != nil {
+			w.logger.Error("route chat failed ", err)
+		}
+	}()
 }
 
 func New(
