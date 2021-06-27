@@ -15,7 +15,7 @@ func NewRandomProduct() catalog.Product {
 	}
 }
 
-func NewRandomStockList(productIds ...int) stock.StockList {
+func NewRandomStockList(productIds ...int) *stock.StockList {
 	stocks := make([]stock.Stock, len(productIds))
 	for i, id := range productIds {
 		stocks[i] = stock.Stock{
@@ -24,5 +24,5 @@ func NewRandomStockList(productIds ...int) stock.StockList {
 			TTL:       rand.Int(1, 100),
 		}
 	}
-	return stock.StockList{Stock: stocks}
+	return &stock.StockList{Stock: stocks}
 }

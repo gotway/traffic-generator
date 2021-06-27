@@ -18,7 +18,7 @@ func (c *Stock) Health() (bool, error) {
 	return health(c.httpClient, getStockPath("/health"))
 }
 
-func (c *Stock) List(productIds ...int) (stock.StockList, error) {
+func (c *Stock) List(productIds ...int) (*stock.StockList, error) {
 	var query map[string][]string
 	if len(productIds) > 0 {
 		productIdsString := make([]string, len(productIds))
@@ -31,22 +31,22 @@ func (c *Stock) List(productIds ...int) (stock.StockList, error) {
 	}
 	res, err := c.httpClient.Get(getStockPath("/list"), query)
 	if err != nil {
-		return stock.StockList{}, err
+		return &stock.StockList{}, err
 	}
 	if res.StatusCode != http.StatusOK {
-		return stock.StockList{}, fmt.Errorf(
+		return &stock.StockList{}, fmt.Errorf(
 			"unable to get stock , status code '%d'",
 			res.StatusCode,
 		)
 	}
 	var stockList stock.StockList
 	if err := json.Unmarshal(res.Response, &stockList); err != nil {
-		return stock.StockList{}, err
+		return &stock.StockList{}, err
 	}
-	return stockList, nil
+	return &stockList, nil
 }
 
-func (c *Stock) Upsert(stockList stock.StockList) (int, error) {
+func (c *Stock) Upsert(stockList *stock.StockList) (int, error) {
 	res, err := c.httpClient.Post(getStockPath("/list"), stockList)
 	if err != nil {
 		return 0, err
