@@ -2,19 +2,22 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/service-examples/pkg/route"
 	"github.com/gotway/traffic-generator/internal/client"
 	"github.com/gotway/traffic-generator/internal/config"
 	"github.com/gotway/traffic-generator/internal/http"
+	"github.com/gotway/traffic-generator/internal/worker"
 
 	gs "github.com/gotway/gotway/pkg/graceful_shutdown"
 )
 
 func main() {
-	_, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	logger := log.NewLogger(log.Fields{
 		"service": "traffic",
 	}, config.Env, config.LogLevel, os.Stdout)
@@ -64,6 +67,29 @@ func main() {
 		logger.Fatal("error connecting to route ", err)
 	}
 	logger.Info("route is ready")
+
+	for i := 0; i < config.NumWorkers; i++ {
+		if i > 0 {
+			<-time.After(1 * time.Second)
+		}
+		name := fmt.Sprintf("worker-%d", i)
+		w := worker.New(
+			name,
+			logger.WithFields(log.Fields{
+				"type":     "worker",
+				"instance": name,
+			}),
+			gotwayClient,
+			catalogClient,
+			stockClient,
+			routeClient,
+			worker.Options{
+				NumClients:      config.NumClients,
+				RequestInterval: config.RequestInterval,
+			},
+		)
+		go w.Start(ctx)
+	}
 
 	gs.GracefulShutdown(logger, cancel, httpClient.Close, routeClient.Close)
 }
