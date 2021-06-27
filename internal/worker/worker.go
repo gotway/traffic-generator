@@ -6,8 +6,11 @@ import (
 	"time"
 
 	"github.com/gotway/gotway/pkg/log"
+	"github.com/gotway/service-examples/pkg/catalog"
 	"github.com/gotway/service-examples/pkg/route"
 	"github.com/gotway/traffic-generator/internal/client"
+	"github.com/gotway/traffic-generator/internal/model"
+	"github.com/gotway/traffic-generator/internal/rand"
 )
 
 type Options struct {
@@ -53,7 +56,30 @@ func (w *Worker) simulateTraffic(ctx context.Context) {
 }
 
 func (w *Worker) singleClientTraffic(ctx context.Context) {
-	// TODO
+	products := []catalog.Product{
+		model.NewRandomProduct(),
+		model.NewRandomProduct(),
+		model.NewRandomProduct(),
+		model.NewRandomProduct(),
+	}
+	created := make([]catalog.ProductCreated, len(products))
+	for i, p := range products {
+		c, err := w.catalogClient.Create(p)
+		if err != nil {
+			w.logger.Error("error creating product ", err)
+		}
+		created[i] = c
+		defer w.catalogClient.Delete(c.ID)
+		if rand.Bool() {
+			if err := w.catalogClient.Update(c.ID, model.NewRandomProduct()); err != nil {
+				w.logger.Error("error updating product ", err)
+			}
+		}
+	}
+	_, err := w.catalogClient.List(0, rand.Int(len(products), 100))
+	if err != nil {
+		w.logger.Error("error listing product ", err)
+	}
 }
 
 func New(
