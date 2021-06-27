@@ -23,6 +23,12 @@ func (c *Catalog) Create(product catalog.Product) (catalog.ProductCreated, error
 	if err != nil {
 		return catalog.ProductCreated{}, err
 	}
+	if res.StatusCode != http.StatusCreated {
+		return catalog.ProductCreated{}, fmt.Errorf(
+			"unable to create product, status code '%d'",
+			res.StatusCode,
+		)
+	}
 	var created catalog.ProductCreated
 	if err := json.Unmarshal(res.Response, &created); err != nil {
 		return catalog.ProductCreated{}, err
@@ -53,9 +59,9 @@ func (c *Catalog) Delete(id int) error {
 }
 
 func (c *Catalog) List(offset, limit int) (catalog.ProductPage, error) {
-	res, err := c.httpClient.Get(getCatalogPath("/products"), map[string]string{
-		"offset": strconv.Itoa(offset),
-		"limit":  strconv.Itoa(limit),
+	res, err := c.httpClient.Get(getCatalogPath("/products"), map[string][]string{
+		"offset": {strconv.Itoa(offset)},
+		"limit":  {strconv.Itoa(limit)},
 	})
 	if err != nil {
 		return catalog.ProductPage{}, err

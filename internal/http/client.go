@@ -25,15 +25,17 @@ type ClientResponse struct {
 	Response   []byte
 }
 
-func (c *Client) Get(path string, query map[string]string) (*ClientResponse, error) {
+func (c *Client) Get(path string, query map[string][]string) (*ClientResponse, error) {
 	req, err := http.NewRequest(http.MethodGet, c.getURL(path), nil)
 	if err != nil {
 		return nil, err
 	}
 	if len(query) > 0 {
 		q := req.URL.Query()
-		for key, value := range query {
-			q.Add(key, value)
+		for key, values := range query {
+			for _, v := range values {
+				q.Add(key, v)
+			}
 		}
 		req.URL.RawQuery = q.Encode()
 	}

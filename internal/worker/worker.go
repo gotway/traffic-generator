@@ -62,13 +62,13 @@ func (w *Worker) singleClientTraffic(ctx context.Context) {
 		model.NewRandomProduct(),
 		model.NewRandomProduct(),
 	}
-	created := make([]catalog.ProductCreated, len(products))
+	created := make([]int, len(products))
 	for i, p := range products {
 		c, err := w.catalogClient.Create(p)
 		if err != nil {
 			w.logger.Error("error creating product ", err)
 		}
-		created[i] = c
+		created[i] = c.ID
 		defer w.catalogClient.Delete(c.ID)
 		if rand.Bool() {
 			if err := w.catalogClient.Update(c.ID, model.NewRandomProduct()); err != nil {
@@ -79,6 +79,13 @@ func (w *Worker) singleClientTraffic(ctx context.Context) {
 	_, err := w.catalogClient.List(0, rand.Int(len(products), 100))
 	if err != nil {
 		w.logger.Error("error listing product ", err)
+	}
+
+	if _, err := w.stockClient.Upsert(model.NewRandomStockList(created...)); err != nil {
+		w.logger.Error("error upserting strock ", err)
+	}
+	if _, err := w.stockClient.List(created...); err != nil {
+		w.logger.Error("error getting stock ", err)
 	}
 }
 
