@@ -87,6 +87,19 @@ func (w *Worker) singleClientTraffic(ctx context.Context) {
 	if _, err := w.stockClient.List(created...); err != nil {
 		w.logger.Error("error getting stock ", err)
 	}
+
+	if _, err = w.routeClient.GetFeature(ctx, route.ValidPoint); err != nil {
+		w.logger.Error("get feature failed ", err)
+	}
+	if _, err := w.routeClient.ListFeatures(ctx, route.Rect); err != nil {
+		w.logger.Error("list features failed ", err)
+	}
+	if _, err := w.routeClient.RecordRoute(ctx); err != nil {
+		w.logger.Error("record route failed ", err)
+	}
+	if _, err := w.routeClient.RouteChat(ctx); err != nil {
+		w.logger.Error("route chat failed ", err)
+	}
 }
 
 func New(
