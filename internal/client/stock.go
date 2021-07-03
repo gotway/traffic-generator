@@ -15,7 +15,7 @@ type Stock struct {
 }
 
 func (c *Stock) Health() (bool, error) {
-	return health(c.httpClient, getStockPath("/health"))
+	return health(c.httpClient, "/health")
 }
 
 func (c *Stock) List(productIds ...int) (*stock.StockList, error) {
@@ -29,7 +29,7 @@ func (c *Stock) List(productIds ...int) (*stock.StockList, error) {
 			"productId": productIdsString,
 		}
 	}
-	res, err := c.httpClient.Get(getStockPath("/list"), query)
+	res, err := c.httpClient.Get("/list", query)
 	if err != nil {
 		return &stock.StockList{}, err
 	}
@@ -47,7 +47,7 @@ func (c *Stock) List(productIds ...int) (*stock.StockList, error) {
 }
 
 func (c *Stock) Upsert(stockList *stock.StockList) (int, error) {
-	res, err := c.httpClient.Post(getStockPath("/list"), stockList)
+	res, err := c.httpClient.Post("/list", stockList)
 	if err != nil {
 		return 0, err
 	}
@@ -55,10 +55,6 @@ func (c *Stock) Upsert(stockList *stock.StockList) (int, error) {
 		return 0, fmt.Errorf("error upserting stock, status code '%d'", res.StatusCode)
 	}
 	return res.StatusCode, nil
-}
-
-func getStockPath(path string) string {
-	return "/stock" + path
 }
 
 func NewStock(httpClient *internalHTTP.Client) *Stock {

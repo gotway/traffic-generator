@@ -12,16 +12,20 @@ var (
 	Env = c.GetEnv("ENV", "local")
 	// LogLevel indicates the log level
 	LogLevel = c.GetEnv("LOG_LEVEL", "debug")
-	// GotwayAddr specifies the Gotway address (host + port)
-	GotwayAddr = c.GetEnv("GOTWAY_ADDRESS", "localhost:11000")
+	// GotwayHost specifies the Gotway host
+	GotwayHost = c.GetEnv("GOTWAY_HOST", "gotway:11000")
+	// CatalogHost specifies the Catalog host
+	CatalogHost = c.GetEnv("CATALOG_HOST", "catalog:11000")
+	// StockHost specifies the Stock host
+	StockHost = c.GetEnv("STOCK_HOST", "stock:11000")
 	// ClientTimeout is the timeout in seconds for connecting to gotway
 	ClientTimeout = time.Duration(
 		c.GetIntEnv("CLIENT_TIMEOUT", 10),
 	) * time.Second
 	// NumWorkers is the number of goroutines used to generate traffic
-	NumWorkers = c.GetIntEnv("NUM_WORKERS", 3)
+	NumWorkers = c.GetIntEnv("NUM_WORKERS", 5)
 	// NumClients is the number of concurrent clients to simulate
-	NumClients = c.GetIntEnv("NUM_CLIENTS", 1)
+	NumClients = c.GetIntEnv("NUM_CLIENTS", 2)
 	// RequestInterval defines the interval of requests in seconds
 	RequestInterval = time.Duration(
 		c.GetIntEnv("REQUEST_INTERVAL", 10),

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/gotway/gotway/pkg/log"
-	"github.com/gotway/service-examples/pkg/route"
 	"github.com/gotway/traffic-generator/internal/client"
 	"github.com/gotway/traffic-generator/internal/config"
 	"github.com/gotway/traffic-generator/internal/http"
@@ -21,21 +20,24 @@ func main() {
 	logger := log.NewLogger(log.Fields{
 		"service": "traffic",
 	}, config.Env, config.LogLevel, os.Stdout)
-	httpClient := http.NewClient(http.GetURL(config.GotwayAddr, config.TLS), http.ClientOptions{
+
+	gotwayHttp := http.NewClient(http.GetURL(config.GotwayHost, config.TLS), http.ClientOptions{
 		Timeout: config.ClientTimeout,
 	})
-
-	gotwayClient := client.NewGotway(httpClient)
+	gotwayClient := client.NewGotway(gotwayHttp)
 	healthy, err := gotwayClient.Health()
 	if err != nil {
-		logger.Fatalf("error connecting to gotway at '%s' %v", config.GotwayAddr, err)
+		logger.Fatalf("error connecting to gotway at '%s' %v", config.GotwayHost, err)
 	}
 	if !healthy {
-		logger.Fatalf("gotway at '%s' is not responding %v", config.GotwayAddr, err)
+		logger.Fatalf("gotway at '%s' is not responding %v", config.GotwayHost, err)
 	}
-	logger.Infof("gotway at '%s' is ready", config.GotwayAddr)
+	logger.Infof("gotway at '%s' is ready", config.GotwayHost)
 
-	catalogClient := client.NewCatalog(httpClient)
+	catalogHttp := http.NewClient(http.GetURL(config.CatalogHost, config.TLS), http.ClientOptions{
+		Timeout: config.ClientTimeout,
+	})
+	catalogClient := client.NewCatalog(catalogHttp)
 	healthy, err = catalogClient.Health()
 	if err != nil {
 		logger.Fatal("error connecting to catalog ", err)
@@ -45,7 +47,10 @@ func main() {
 	}
 	logger.Info("catalog is ready")
 
-	stockClient := client.NewStock(httpClient)
+	stockHttp := http.NewClient(http.GetURL(config.StockHost, config.TLS), http.ClientOptions{
+		Timeout: config.ClientTimeout,
+	})
+	stockClient := client.NewStock(stockHttp)
 	healthy, err = stockClient.Health()
 	if err != nil {
 		logger.Fatal("error connecting to stock ", err)
@@ -54,19 +59,6 @@ func main() {
 		logger.Fatal("stock is not responding")
 	}
 	logger.Info("stock is ready")
-
-	routeClient, err := route.NewClient(config.GotwayAddr, route.ClientOptions{
-		Timeout: config.ClientTimeout,
-		TLS: route.TLSOptions{
-			Enabled:    config.TLS,
-			CA:         config.TLSca,
-			ServerHost: config.TLSserver,
-		},
-	})
-	if err != nil {
-		logger.Fatal("error connecting to route ", err)
-	}
-	logger.Info("route is ready")
 
 	for i := 0; i < config.NumWorkers; i++ {
 		if i > 0 {
@@ -82,7 +74,6 @@ func main() {
 			gotwayClient,
 			catalogClient,
 			stockClient,
-			routeClient,
 			worker.Options{
 				NumClients:      config.NumClients,
 				RequestInterval: config.RequestInterval,
@@ -91,5 +82,5 @@ func main() {
 		go w.Start(ctx)
 	}
 
-	gs.GracefulShutdown(logger, cancel, httpClient.Close, routeClient.Close)
+	gs.GracefulShutdown(logger, cancel, gotwayHttp.Close, catalogHttp.Close, stockHttp.Close)
 }

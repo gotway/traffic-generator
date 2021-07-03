@@ -6,7 +6,6 @@ import (
 
 	"github.com/gotway/gotway/pkg/log"
 	"github.com/gotway/service-examples/pkg/catalog"
-	"github.com/gotway/service-examples/pkg/route"
 	"github.com/gotway/traffic-generator/internal/client"
 	"github.com/gotway/traffic-generator/internal/model"
 	"github.com/gotway/traffic-generator/internal/rand"
@@ -23,7 +22,6 @@ type Worker struct {
 	gotwayClient  *client.Gotway
 	catalogClient *client.Catalog
 	stockClient   *client.Stock
-	routeClient   *route.Client
 	options       Options
 }
 
@@ -49,48 +47,37 @@ func (w *Worker) simulateTraffic(ctx context.Context) {
 }
 
 func (w *Worker) singleClientTraffic(ctx context.Context) {
-	go func() {
-		products := []catalog.Product{
-			model.NewRandomProduct(),
-			model.NewRandomProduct(),
-			model.NewRandomProduct(),
-			model.NewRandomProduct(),
-		}
-		created := make([]int, len(products))
-		for i, p := range products {
-			c, err := w.catalogClient.Create(p)
-			if err != nil {
-				w.logger.Error("error creating product ", err)
-			}
-			created[i] = c.ID
-			defer w.catalogClient.Delete(c.ID)
-			if rand.Bool() {
-				if err := w.catalogClient.Update(c.ID, model.NewRandomProduct()); err != nil {
-					w.logger.Error("error updating product ", err)
-				}
-			}
-		}
-		_, err := w.catalogClient.List(0, rand.Int(len(products), 100))
+	products := []catalog.Product{
+		model.NewRandomProduct(),
+		model.NewRandomProduct(),
+		model.NewRandomProduct(),
+		model.NewRandomProduct(),
+	}
+	created := make([]int, len(products))
+	for i, p := range products {
+		c, err := w.catalogClient.Create(p)
 		if err != nil {
-			w.logger.Error("error listing product ", err)
+			w.logger.Error("error creating product ", err)
 		}
+		created[i] = c.ID
+		defer w.catalogClient.Delete(c.ID)
+		if rand.Bool() {
+			if err := w.catalogClient.Update(c.ID, model.NewRandomProduct()); err != nil {
+				w.logger.Error("error updating product ", err)
+			}
+		}
+	}
+	_, err := w.catalogClient.List(0, rand.Int(len(products), 100))
+	if err != nil {
+		w.logger.Error("error listing product ", err)
+	}
 
-		if _, err := w.stockClient.Upsert(model.NewRandomStockList(created...)); err != nil {
-			w.logger.Error("error upserting strock ", err)
-		}
-		if _, err := w.stockClient.List(created...); err != nil {
-			w.logger.Error("error getting stock ", err)
-		}
-	}()
-
-	go func() {
-		if _, err := w.routeClient.GetFeature(ctx, route.ValidPoint); err != nil {
-			w.logger.Error("get feature failed ", err)
-		}
-		if _, err := w.routeClient.ListFeatures(ctx, route.Rect); err != nil {
-			w.logger.Error("list features failed ", err)
-		}
-	}()
+	if _, err := w.stockClient.Upsert(model.NewRandomStockList(created...)); err != nil {
+		w.logger.Error("error upserting strock ", err)
+	}
+	if _, err := w.stockClient.List(created...); err != nil {
+		w.logger.Error("error getting stock ", err)
+	}
 }
 
 func New(
@@ -99,8 +86,7 @@ func New(
 	gotwayClient *client.Gotway,
 	catalogClient *client.Catalog,
 	stockClient *client.Stock,
-	routeClient *route.Client,
 	options Options,
 ) *Worker {
-	return &Worker{name, logger, gotwayClient, catalogClient, stockClient, routeClient, options}
+	return &Worker{name, logger, gotwayClient, catalogClient, stockClient, options}
 }

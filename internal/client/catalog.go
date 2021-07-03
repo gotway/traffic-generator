@@ -15,11 +15,11 @@ type Catalog struct {
 }
 
 func (c *Catalog) Health() (bool, error) {
-	return health(c.httpClient, getCatalogPath("/health"))
+	return health(c.httpClient, "/health")
 }
 
 func (c *Catalog) Create(product catalog.Product) (catalog.ProductCreated, error) {
-	res, err := c.httpClient.Post(getCatalogPath("/product"), product)
+	res, err := c.httpClient.Post("/product", product)
 	if err != nil {
 		return catalog.ProductCreated{}, err
 	}
@@ -37,7 +37,7 @@ func (c *Catalog) Create(product catalog.Product) (catalog.ProductCreated, error
 }
 
 func (c *Catalog) Update(id int, product catalog.Product) error {
-	statusCode, err := c.httpClient.Put(getCatalogPath("/product"), id, product)
+	statusCode, err := c.httpClient.Put("/product", id, product)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func (c *Catalog) Update(id int, product catalog.Product) error {
 }
 
 func (c *Catalog) Delete(id int) error {
-	statusCode, err := c.httpClient.Delete(getCatalogPath("/product"), id)
+	statusCode, err := c.httpClient.Delete("/product", id)
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (c *Catalog) Delete(id int) error {
 }
 
 func (c *Catalog) List(offset, limit int) (catalog.ProductPage, error) {
-	res, err := c.httpClient.Get(getCatalogPath("/products"), map[string][]string{
+	res, err := c.httpClient.Get("/products", map[string][]string{
 		"offset": {strconv.Itoa(offset)},
 		"limit":  {strconv.Itoa(limit)},
 	})
@@ -71,10 +71,6 @@ func (c *Catalog) List(offset, limit int) (catalog.ProductPage, error) {
 		return catalog.ProductPage{}, err
 	}
 	return page, nil
-}
-
-func getCatalogPath(path string) string {
-	return "/catalog" + path
 }
 
 func NewCatalog(httpClient *internalHTTP.Client) *Catalog {
