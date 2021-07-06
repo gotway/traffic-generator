@@ -2,7 +2,7 @@ version: "3.3"
 
 services:
   traffic:
-    image: gotwaygateway/traffic-generator:v0.0.1
+    image: gotwaygateway/traffic:v0.0.1
     environment:
       - ENV=production
       - LOG_LEVEL=debug
@@ -10,11 +10,7 @@ services:
       - CATALOG_HOST=catalog.gotway.duckdns.org:4433
       - STOCK_HOST=stock.gotway.duckdns.org:4433
       - CLIENT_TIMEOUT=10
-      - NUM_WORKERS=1
-      - NUM_CLIENTS=1
-      - REQUEST_INTERVAL=60
+      - NUM_WORKERS=5
+      - NUM_CLIENTS=2
+      - REQUEST_INTERVAL=30
       - TLS=true
-    ports:
-      - "11000:11000"
-    volumes:
-      - "./cert:/etc/ssl"
