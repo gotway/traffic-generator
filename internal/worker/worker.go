@@ -60,7 +60,11 @@ func (w *Worker) singleClientTraffic(ctx context.Context) {
 			w.logger.Error("error creating product ", err)
 		}
 		created[i] = c.ID
-		defer w.catalogClient.Delete(c.ID)
+		defer func() {
+			if err := w.catalogClient.Delete(c.ID); err != nil {
+				w.logger.Error("error deleting product ", err)
+			}
+		}()
 		if rand.Bool() {
 			if err := w.catalogClient.Update(c.ID, model.NewRandomProduct()); err != nil {
 				w.logger.Error("error updating product ", err)

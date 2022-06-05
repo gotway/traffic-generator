@@ -6,9 +6,9 @@ services:
     environment:
       - ENV=production
       - LOG_LEVEL=debug
-      - GOTWAY_HOST=gotway.duckdns.org:4433
-      - CATALOG_HOST=catalog.gotway.duckdns.org:4433
-      - STOCK_HOST=stock.gotway.duckdns.org:4433
+      - GOTWAY_HOST=gotway.duckdns.org:9111
+      - CATALOG_HOST=catalog.gotway.duckdns.org:9111
+      - STOCK_HOST=stock.gotway.duckdns.org:9111
       - CLIENT_TIMEOUT=10
       - NUM_WORKERS=5
       - NUM_CLIENTS=2
